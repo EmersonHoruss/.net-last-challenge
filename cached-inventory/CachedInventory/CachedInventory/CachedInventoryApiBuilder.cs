@@ -1,6 +1,7 @@
 namespace CachedInventory;
 
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Concurrent;
 
 public static class CachedInventoryApiBuilder
 {
@@ -13,6 +14,7 @@ public static class CachedInventoryApiBuilder
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
     builder.Services.AddScoped<IWarehouseStockSystemClient, WarehouseStockSystemClient>();
+    builder.Services.AddSingleton<ICache, Cache>();
 
     var app = builder.Build();
 
@@ -25,40 +27,50 @@ public static class CachedInventoryApiBuilder
 
     app.UseHttpsRedirection();
 
-    app.MapGet(
-        "/stock/{productId:int}",
-        async ([FromServices] IWarehouseStockSystemClient client, int productId) => await client.GetStock(productId))
-      .WithName("GetStock")
-      .WithOpenApi();
+    async Task<int> GetStock([FromServices] IWarehouseStockSystemClient client, [FromServices] ICache cache, int productId)
+    {
+      if (!cache.Exists(productId))
+      {
+        var stock = await client.GetStock(productId);
+        cache.AddOrUpdateValue(productId, stock);
+        return stock;
+      }
 
-    app.MapPost(
-        "/stock/retrieve",
-        async ([FromServices] IWarehouseStockSystemClient client, [FromBody] RetrieveStockRequest req) =>
-        {
-          var stock = await client.GetStock(req.ProductId);
-          if (stock < req.Amount)
-          {
-            return Results.BadRequest("Not enough stock.");
-          }
+      return cache.GetValue(productId);
+    }
 
-          await client.UpdateStock(req.ProductId, stock - req.Amount);
-          return Results.Ok();
-        })
-      .WithName("RetrieveStock")
-      .WithOpenApi();
+    async Task<IResult> RetrieveStock([FromServices] IWarehouseStockSystemClient client,  [FromBody] RetrieveStockRequest req)
+    {
+      var stock = await client.GetStock(req.ProductId);
+      Console.WriteLine("HELLO WORLD");
+      if (stock < req.Amount)
+      {
+        return Results.BadRequest("Not enough stock.");
+      }
 
+      await client.UpdateStock(req.ProductId, stock - req.Amount);
+      return Results.Ok();
+    }
 
-    app.MapPost(
-        "/stock/restock",
-        async ([FromServices] IWarehouseStockSystemClient client, [FromBody] RestockRequest req) =>
-        {
-          var stock = await client.GetStock(req.ProductId);
-          await client.UpdateStock(req.ProductId, req.Amount + stock);
-          return Results.Ok();
-        })
-      .WithName("Restock")
-      .WithOpenApi();
+    async Task<IResult> Restock([FromServices] IWarehouseStockSystemClient client, [FromBody] RestockRequest req)
+    {
+      var stock = await client.GetStock(req.ProductId);
+      await client.UpdateStock(req.ProductId, req.Amount + stock);
+      return Results.Ok();
+    }
 
+    // Use the functions in the app.MapGet and app.MapPost calls
+    app.MapGet("/stock/{productId:int}", GetStock)
+         .WithName("GetStock")
+         .WithOpenApi();
+
+    app.MapPost("/stock/retrieve", RetrieveStock)
+         .WithName("RetrieveStock")
+         .WithOpenApi();
+
+    app.MapPost("/stock/restock", Restock)
+         .WithName("Restock")
+         .WithOpenApi();
     return app;
   }
 }
