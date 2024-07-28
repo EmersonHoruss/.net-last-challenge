@@ -1,0 +1,99 @@
+Mensajes de salida estándar:
+ Starting restock...
+ STOCK CACHE -> 0
+ STOCK DB -> 15
+ :::Fetched stock: 15 for product ID: 2. Duration: 2513 ms. Stock DB 15. Stock Cache 0
+ :::Restocked product ID: 2 with 13. Duration: 26 ms.
+ STOCK CACHE -> 28
+ STOCK DB -> 28
+ :::Fetched stock: 28 for product ID: 2. Duration: 0 ms. Stock DB 28. Stock Cache 28
+ Starting verify stock from file...
+ Verified stock from file: 28, expected: 28.
+ :::Retrieve before
+ :::Retrieve before
+ :::Retrieve before
+ :::Retrieve before
+ :::Retrieve before
+ :::Retrieve before
+ :::Retrieve before
+ Starting all task...
+ STOCK CACHE -> 28
+ STOCK CACHE -> 28
+ STOCK CACHE -> 28
+ STOCK CACHE -> 28
+ STOCK CACHE -> 28
+ STOCK CACHE -> 28
+ STOCK CACHE -> 28
+ STOCK DB -> 28
+ STOCK DB -> 28
+ STOCK DB -> 28
+ STOCK DB -> 28
+ STOCK DB -> 28
+ STOCK DB -> 28
+ STOCK DB -> 28
+ :::Fetched stock: 28 for product ID: 2. Duration: 1 ms. Stock DB 28. Stock Cache 28
+ :::Fetched stock: 28 for product ID: 2. Duration: 1 ms. Stock DB 28. Stock Cache 28
+ :::Fetched stock: 28 for product ID: 2. Duration: 0 ms. Stock DB 28. Stock Cache 28
+ :::Fetched stock: 28 for product ID: 2. Duration: 1 ms. Stock DB 28. Stock Cache 28
+ :::Fetched stock: 28 for product ID: 2. Duration: 1 ms. Stock DB 28. Stock Cache 28
+ :::Fetched stock: 28 for product ID: 2. Duration: 1 ms. Stock DB 28. Stock Cache 28
+ :::Fetched stock: 28 for product ID: 2. Duration: 1 ms. Stock DB 28. Stock Cache 28
+ :::Retrieve after
+ :::Retrieve after
+ :::Retrieve after
+ :::Retrieve after
+ :::Retrieve after
+ :::Retrieve after
+ :::Retrieve after
+ STOCK CACHE -> 4
+ STOCK CACHE -> 4
+ STOCK CACHE -> 4
+ STOCK CACHE -> 4
+ STOCK CACHE -> 4
+ STOCK CACHE -> 4
+ STOCK CACHE -> 4
+ STOCK DB -> 13
+ STOCK DB -> 13
+ STOCK DB -> 13
+ STOCK DB -> 13
+ STOCK DB -> 13
+ STOCK DB -> 13
+ STOCK DB -> 13
+ :::Fetched stock: 4 for product ID: 2. Duration: 0 ms. Stock DB 13. Stock Cache 4
+ :::Fetched stock: 4 for product ID: 2. Duration: 0 ms. Stock DB 13. Stock Cache 4
+ :::Retrieved 7 from product ID: 2. Duration: 25 ms.
+ :::Retrieved 3 from product ID: 2. Duration: 25 ms.
+ :::Fetched stock: 4 for product ID: 2. Duration: 0 ms. Stock DB 13. Stock Cache 4
+ :::Retrieved 5 from product ID: 2. Duration: 25 ms.
+ :::Fetched stock: 4 for product ID: 2. Duration: 0 ms. Stock DB 13. Stock Cache 4
+ :::Retrieved 7 from product ID: 2. Duration: 25 ms.
+ :::Retrieved 3 from product ID: 2. Duration: 25 ms.
+ :::Fetched stock: 4 for product ID: 2. Duration: 0 ms. Stock DB 13. Stock Cache 4
+ :::Retrieved 5 from product ID: 2. Duration: 25 ms.
+ :::Retrieved 7 from product ID: 2. Duration: 25 ms.
+ :::Retrieved 3 from product ID: 2. Duration: 25 ms.
+ :::Fetched stock: 4 for product ID: 2. Duration: 0 ms. Stock DB 13. Stock Cache 4
+ :::Retrieved 5 from product ID: 2. Duration: 25 ms.
+ :::Retrieved 3 from product ID: 2. Duration: 25 ms.
+ :::Fetched stock: 4 for product ID: 2. Duration: 0 ms. Stock DB 13. Stock Cache 4
+ :::Retrieved 5 from product ID: 2. Duration: 25 ms.
+ :::Fetched stock: 4 for product ID: 2. Duration: 0 ms. Stock DB 13. Stock Cache 4
+ :::Fetched stock: 4 for product ID: 2. Duration: 0 ms. Stock DB 13. Stock Cache 4
+ :::Retrieved 5 from product ID: 2. Duration: 25 ms.
+ :::Fetched stock: 4 for product ID: 2. Duration: 0 ms. Stock DB 13. Stock Cache 4
+ :::Retrieved 5 from product ID: 2. Duration: 25 ms.
+ :::Fetched stock: 4 for product ID: 2. Duration: 0 ms. Stock DB 13. Stock Cache 4
+ :::Fetched stock: 4 for product ID: 2. Duration: 0 ms. Stock DB 13. Stock Cache 4
+ :::Fetched stock: 4 for product ID: 2. Duration: 0 ms. Stock DB 13. Stock Cache 4
+ :::Retrieved 2 from product ID: 2. Duration: 25 ms.
+ :::Retrieved 2 from product ID: 2. Duration: 25 ms.
+ :::Retrieved 4 from product ID: 2. Duration: 25 ms.
+ :::Fetched stock: 4 for product ID: 2. Duration: 0 ms. Stock DB 13. Stock Cache 4
+ :::Retrieved 1 from product ID: 2. Duration: 25 ms.
+ :::Fetched stock: 4 for product ID: 2. Duration: 0 ms. Stock DB 13. Stock Cache 4
+ :::Retrieved 6 from product ID: 2. Duration: 25 ms.
+ Starting final stock...
+ STOCK CACHE -> 4
+ STOCK DB -> 13
+ :::Fetched stock: 4 for product ID: 2. Duration: 0 ms. Stock DB 13. Stock Cache 4
+ Duración promedio: 22ms, se esperaba un máximo de 1000ms.

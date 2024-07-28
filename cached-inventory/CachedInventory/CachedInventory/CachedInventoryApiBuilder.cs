@@ -63,7 +63,7 @@ public static class CachedInventoryApiBuilder
       }
 
       // await client.UpdateStock(req.ProductId, stock - req.Amount);
-      await Task.Run(() => client.UpdateStock(req.ProductId, stock - req.Amount));
+      Task.Run(() => client.UpdateStock(req.ProductId, stock - req.Amount));
       cache.AddOrUpdateValue(req.ProductId, stock - req.Amount);
       await Task.Delay(10);
       return Results.Ok();
@@ -75,7 +75,7 @@ public static class CachedInventoryApiBuilder
       // var stock = await client.GetStock(req.ProductId);
 
       // await client.UpdateStock(req.ProductId, req.Amount + stock);
-      await Task.Run(() => client.UpdateStock(req.ProductId, req.Amount + stock));
+      Task.Run(() => client.UpdateStock(req.ProductId, req.Amount + stock));
 
       cache.AddOrUpdateValue(req.ProductId, req.Amount + stock);
       await Task.Delay(10);
