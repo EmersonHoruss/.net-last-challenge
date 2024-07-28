@@ -2,6 +2,8 @@ namespace CachedInventory;
 
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Concurrent;
+using System.Security.Cryptography;
+using System.Threading.Tasks;
 
 public static class CachedInventoryApiBuilder
 {
@@ -39,29 +41,58 @@ public static class CachedInventoryApiBuilder
       return cache.GetValue(productId);
     }
 
-    async Task<IResult> RetrieveStock([FromServices] IWarehouseStockSystemClient client,  [FromBody] RetrieveStockRequest req)
+    int GetStockCache([FromServices] ICache cache, int productId)
     {
-      var stock = await client.GetStock(req.ProductId);
-      Console.WriteLine("HELLO WORLD");
+      Console.WriteLine();
+      return cache.GetValue(productId);
+    }
+
+    async Task<int> GetStockDB([FromServices] IWarehouseStockSystemClient client, int productId)
+    {
+      Console.WriteLine();
+      return await client.GetStock(productId);
+    }
+
+    async Task<IResult> RetrieveStock([FromServices] IWarehouseStockSystemClient client, [FromServices] ICache cache, [FromBody] RetrieveStockRequest req)
+    {
+      var stock = cache.GetValue(req.ProductId);
+      // var stock = await client.GetStock(req.ProductId);
       if (stock < req.Amount)
       {
         return Results.BadRequest("Not enough stock.");
       }
 
-      await client.UpdateStock(req.ProductId, stock - req.Amount);
+      // await client.UpdateStock(req.ProductId, stock - req.Amount);
+      await Task.Run(() => client.UpdateStock(req.ProductId, stock - req.Amount));
+      cache.AddOrUpdateValue(req.ProductId, stock - req.Amount);
+      await Task.Delay(10);
       return Results.Ok();
     }
 
-    async Task<IResult> Restock([FromServices] IWarehouseStockSystemClient client, [FromBody] RestockRequest req)
+    async Task<IResult> Restock([FromServices] IWarehouseStockSystemClient client, [FromServices] ICache cache, [FromBody] RestockRequest req)
     {
-      var stock = await client.GetStock(req.ProductId);
-      await client.UpdateStock(req.ProductId, req.Amount + stock);
+      var stock = cache.GetValue(req.ProductId);
+      // var stock = await client.GetStock(req.ProductId);
+
+      // await client.UpdateStock(req.ProductId, req.Amount + stock);
+      await Task.Run(() => client.UpdateStock(req.ProductId, req.Amount + stock));
+
+      cache.AddOrUpdateValue(req.ProductId, req.Amount + stock);
+      await Task.Delay(10);
       return Results.Ok();
     }
 
     // Use the functions in the app.MapGet and app.MapPost calls
     app.MapGet("/stock/{productId:int}", GetStock)
          .WithName("GetStock")
+         .WithOpenApi();
+
+    app.MapGet("/stockcache/{productId:int}", GetStockCache)
+         .WithName("GetStockCache")
+         .WithOpenApi();
+
+    app.MapGet("/stockdb/{productId:int}", GetStockDB)
+         .WithName("GetStockDB")
          .WithOpenApi();
 
     app.MapPost("/stock/retrieve", RetrieveStock)
