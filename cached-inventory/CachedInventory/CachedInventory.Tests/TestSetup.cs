@@ -4,8 +4,9 @@ using System.Diagnostics;
 using System.Net.NetworkInformation;
 using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
+using Xunit.Abstractions; // Add this using directive
 
-public record TestSetup(string Url) : IAsyncDisposable
+public record TestSetup(string Url, ITestOutputHelper Output) : IAsyncDisposable
 {
   private static readonly SemaphoreSlim PortSemaphore = new(1);
   private static readonly Random Random = new();
@@ -26,22 +27,37 @@ public record TestSetup(string Url) : IAsyncDisposable
     await Task.Delay(10_500);
     var fileStock = await WarehouseStockSystemClient.GetStockDirectlyFromFile(productId);
     Assert.True(
-      fileStock == expectedStock,
-      $"El fichero no se actualizó correctamente. Stock en el fichero: {fileStock}. Stock esperado: {expectedStock}.");
+        fileStock == expectedStock,
+        $"El fichero no se actualizó correctamente. Stock en el fichero: {fileStock}. Stock esperado: {expectedStock}.");
+    Output.WriteLine($"Verified stock from file: {fileStock}, expected: {expectedStock}.");
   }
 
   public async Task<int> GetStock(int productId, bool isFirst = false)
   {
+    var responseCache = await Client.GetAsync($"{Url}stockcache/{productId}");
+    var contentCache = await responseCache.Content.ReadAsStringAsync();
+    var stockCache = int.Parse(contentCache);
+    Output.WriteLine($"STOCK CACHE -> {stockCache}");
+
+    var responseDB = await Client.GetAsync($"{Url}stockdb/{productId}");
+    var contentDB = await responseDB.Content.ReadAsStringAsync();
+    var stockDB = int.Parse(contentDB);
+    Output.WriteLine($"STOCK DB -> {stockDB}");
+
     var stopwatch = Stopwatch.StartNew();
     var response = await Client.GetAsync($"{Url}stock/{productId}");
+
     var content = await response.Content.ReadAsStringAsync();
     stopwatch.Stop();
     if (!isFirst)
     {
       requestDurations.Add(stopwatch.ElapsedMilliseconds);
     }
+
+    var stock = int.Parse(content);
+    Output.WriteLine($":::Fetched stock: {stock} for product ID: {productId}. Duration: {stopwatch.ElapsedMilliseconds} ms. Stock DB {stockDB}. Stock Cache {stockCache}");
     Assert.True(response.IsSuccessStatusCode, $"Error al obtener el stock del producto {productId}.");
-    return int.Parse(content);
+    return stockDB;
   }
 
   public async Task Restock(int productId, int totalToRetrieve)
@@ -59,6 +75,10 @@ public record TestSetup(string Url) : IAsyncDisposable
         var stopwatch = Stopwatch.StartNew();
         var response = await Client.PostAsync($"{Url}stock/restock", restockRequestContent);
         stopwatch.Stop();
+
+        Output.WriteLine($":::Restocked product ID: {productId} with {missingStock}. Duration: {stopwatch.ElapsedMilliseconds} ms.");
+        await GetStock(productId, true);
+
         requestDurations.Add(stopwatch.ElapsedMilliseconds);
         Assert.True(response.IsSuccessStatusCode, $"Error al reponer el stock del producto {productId}.");
         return;
@@ -71,6 +91,8 @@ public record TestSetup(string Url) : IAsyncDisposable
 
   public async Task Retrieve(int productId, int amount)
   {
+    Output.WriteLine($":::Retrieve before");
+    await GetStock(productId, true);
     var retrieveRequest = new { productId, amount };
     var retrieveRequestJson = JsonSerializer.Serialize(retrieveRequest);
     var retrieveRequestContent = new StringContent(retrieveRequestJson);
@@ -78,8 +100,12 @@ public record TestSetup(string Url) : IAsyncDisposable
     var stopwatch = Stopwatch.StartNew();
     var response = await Client.PostAsync($"{Url}stock/retrieve", retrieveRequestContent);
     stopwatch.Stop();
+    Output.WriteLine($":::Retrieve after");
+    await GetStock(productId, true);
+
     requestDurations.Add(stopwatch.ElapsedMilliseconds);
     Assert.True(response.IsSuccessStatusCode, $"Error al retirar el stock del producto {productId}.");
+    Output.WriteLine($":::Retrieved {amount} from product ID: {productId}. Duration: {stopwatch.ElapsedMilliseconds} ms.");
   }
 
   private static int GetRandomPort() => Random.Next(30000) + 10000;
@@ -100,15 +126,14 @@ public record TestSetup(string Url) : IAsyncDisposable
     }
   }
 
-  // ReSharper disable once ReturnTypeCanBeEnumerable.Local
   private static TcpConnectionInformation[] GetConnectionInfo() =>
-    IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections();
+      IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections();
 
 
-  public static async Task<TestSetup> Initialize()
+  public static async Task<TestSetup> Initialize(ITestOutputHelper output)
   {
     var baseUrl = await WebAppTracker.Get();
-    return new(baseUrl);
+    return new(baseUrl, output);
   }
 
   private static class WebAppTracker
@@ -130,7 +155,7 @@ public record TestSetup(string Url) : IAsyncDisposable
 
         var sitePort = await GetFreePort();
         var baseUrl = $"http://localhost:{sitePort}/";
-        var app = CachedInventoryApiBuilder.Build(["--urls", baseUrl]);
+        var app = CachedInventoryApiBuilder.Build(new[] { "--urls", baseUrl });
         await app.StartAsync();
         setup = (app, baseUrl);
 
