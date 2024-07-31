@@ -13,6 +13,8 @@ public interface ICache
 public class Cache : ICache
 {
     private readonly ConcurrentDictionary<int, int> dictionary = new();
+    private readonly IWarehouseStockSystemClient client;
+    public Cache(IWarehouseStockSystemClient client) => this.client = client;
 
     public bool Exists(int key) => dictionary.TryGetValue(key, out var _);
 
@@ -22,5 +24,11 @@ public class Cache : ICache
         return value;
     }
 
-    public void AddOrUpdateValue(int key, int value) => dictionary.AddOrUpdate(key, value, (k, oldValue) => value);
+    public void AddOrUpdateValue(int key, int delta) =>
+        dictionary.AddOrUpdate(key, delta, (k, oldValue) =>
+        {
+            var newValue = oldValue + delta;
+            _ = Task.Run(() => _ = client.UpdateStock(k, newValue));
+            return newValue;
+        });
 }
